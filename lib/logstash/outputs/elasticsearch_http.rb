@@ -91,6 +91,9 @@ class LogStash::Outputs::ElasticSearchHTTP < LogStash::Outputs::Base
   # will wait until the primary and the replica shards have been
   # written.
   config :replication, :validate => ['async', 'sync'], :default => 'sync'
+  
+  # Set the protocol to contact Elasticsearch
+  config :protocol, :validate => ['http', 'https'], :default => 'http'
 
   public
   def register
@@ -99,11 +102,11 @@ class LogStash::Outputs::ElasticSearchHTTP < LogStash::Outputs::Base
     @queue = []
 
     auth = @user && @password ? "#{@user}:#{@password.value}@" : ""
-    @bulk_url = "http://#{auth}#{@host}:#{@port}/_bulk?replication=#{@replication}"
+    @bulk_url = "#{@protocol}://#{auth}#{@host}:#{@port}/_bulk?replication=#{@replication}"
     if @manage_template
       @logger.info("Automatic template management enabled", :manage_template => @manage_template.to_s)
-      template_search_url = "http://#{auth}#{@host}:#{@port}/_template/*"
-      @template_url = "http://#{auth}#{@host}:#{@port}/_template/#{@template_name}"
+      template_search_url = "#{@protocol}://#{auth}#{@host}:#{@port}/_template/*"
+      @template_url = "#{@protocol}://#{auth}#{@host}:#{@port}/_template/#{@template_name}"
       if @template_overwrite
         @logger.info("Template overwrite enabled.  Deleting existing template.", :template_overwrite => @template_overwrite.to_s)
         response = @agent.get!(@template_url)
